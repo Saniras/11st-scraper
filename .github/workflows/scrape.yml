@@ -1,0 +1,35 @@
+name: Scrape 11st Products
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"  # 6시간마다 실행 (UTC 기준)
+  workflow_dispatch:        # GitHub UI에서 수동 실행 버튼
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run scraper
+        env:
+          ELEVENST_API_KEY: ${{ secrets.ELEVENST_API_KEY }}
+        run: npm run scrape
+
+      - name: Commit & push data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/11st-products.json || echo "nothing to add"
+          git commit -m "Update 11st products" || echo "nothing to commit"
+          git push || echo "nothing to push"
